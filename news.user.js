@@ -192,20 +192,22 @@ async function checkNews() {
 }
 
 async function addGlobalStyle() {
-	const res = await fetch(addScriptRepoPrefix('/style.css'));
+	const res = await fetch(
+		addScriptRepoPrefix('/style.css'),
+		{ cache: "no-cache" });
 	const css = await res.text();
 	GM_addStyle(css);
 }
 
 async function fetchNewsList() {
 	const listUrl = addScriptRepoPrefix('/news/list.json');
-	const res = await fetch(listUrl);
+	const res = await fetch(listUrl, { cache: "no-cache" });
 	return res.json();
 }
 
 async function fetchNewsHTML(id) {
 	const newsUrl = addScriptRepoPrefix(`/news/${id}.html`);
-	const res = await fetch(newsUrl);
+	const res = await fetch(newsUrl, { cache: "no-cache" });
 	return res.text();
 }
 
