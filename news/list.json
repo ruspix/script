@@ -4,5 +4,11 @@
 		"title": "First article",
 		"description": "some description",
 		"createdAt": "Sun, 15 Dec 2024 17:44:14 GMT"
+	},
+	{
+		"id": "test",
+		"title": "Second article",
+		"description": "some description",
+		"createdAt": "Sun, 15 Dec 2024 17:44:14 GMT"
 	}
 ]
