@@ -1,0 +1,111 @@
+@keyframes glow {
+	from {
+		box-shadow: 0 0 5px darkred, 0 0 10px darkred, 0 0 15px darkred;
+	}
+
+	to {
+		box-shadow: 0 0 20px darkred, 0 0 30px darkred, 0 0 40px darkred;
+	}
+}
+
+.rp-button *,
+.rp-modal * {
+	background: none;
+	border: none;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.rp-button img,
+.rp-modal img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.rp-button,
+.rp-modal {
+	background-color: rgba(0,0,0,0.9);
+	border: darkred 1px solid;
+}
+
+.rp-button {
+	cursor: pointer;
+	user-select: none;
+	position: fixed;
+	padding: 3px;
+	top: 16px;
+	right: 16px;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+}
+
+.rp-button.unchecked {
+	animation: glow 0.75s infinite alternate;
+}
+
+.rp-modal {
+	opacity: 1;
+	color: white;
+	z-index: 9999;
+	position: fixed;
+	padding: 10px;
+	border-radius: 5px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: calc(100vw - 10%);
+	height: calc(100vh - 10%);
+	transition: opacity 0.25s;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	gap: 10px;
+	user-select: text;
+}
+
+.rp-modal:not(.show) {
+	display: none;
+	opacity: 0;
+}
+
+.rp-modal__header {
+	position: relative;
+}
+
+.rp-modal__header-title {
+	width: 100%;
+}
+
+.rp-modal__header-time {
+	font-family: monospace;
+	width: 100%;
+	opacity: 0.65;
+}
+
+.rp-modal__header-close {
+	color: white;
+	cursor: pointer;
+	user-select: none;
+	width: 40px;
+	height: 40px;
+	position: absolute;
+	top: 50%;
+	transform: translate(0%, -50%);
+	right: 10px;
+}
+
+.rp-modal__header-close img {
+	width: ;
+}
+
+.rp-modal__body {
+	width: 100%;
+	height: 100%;
+	padding-left: 10px;
+}
