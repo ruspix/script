@@ -61,7 +61,7 @@ function main() {
 	`;
 	
 	const icon = document.createElement('img');
-	icon.src = addScriptRepoPrefix('/ruspixel-icon.png');
+	icon.src = addScriptRepoPrefix('/assets/ruspixel-icon.png');
 	icon.style = `
 		box-sizing: border-box;
 		width: 100%;
