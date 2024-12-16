@@ -37,8 +37,8 @@
 // TODO
 // handle case when modal opened and news updates
 
-const hostUrl = 'http://localhost';
-// const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+// const hostUrl = 'http://localhost';
+const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news';
 
