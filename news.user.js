@@ -31,9 +31,6 @@
 // @match        *://globepixel.fun/*
 // ==/UserScript==
 
-// TODO
-// handle case when modal opened and news updates
-
 const { h, render } = preact;
 const html = htm.bind(h);
 
@@ -91,11 +88,14 @@ async function main() {
 		if(!updated) return;
 
 		updateLocalStorage({ lastList: metas });
-
-		playNotification();
+		
 		const htmls = await fetchAllNewsHTML(metas);
 		modal.update({ news: mergeMetasAndHtmls(metas, htmls) });
-		button.update({ unchecked: true });
+		
+		if(!modal.props.show) {
+			button.update({ unchecked: true });
+			playNotification();
+		}
 	}
 
 	checkIntervalCallback();
