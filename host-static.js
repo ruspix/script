@@ -10,7 +10,7 @@ const app = new Hono();
 app.use(cors({
 	origin: (origin, c) => origin
 }));
-app.use('/*', serveStatic({ root: './' }));
+app.use('/*', serveStatic({ root: './news' }));
 serve({
 	fetch: app.fetch,
 	port,

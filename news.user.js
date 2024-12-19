@@ -37,8 +37,8 @@
 const { h, render } = preact;
 const html = htm.bind(h);
 
-// const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+// const newsUrl = 'http://localhost';
 const newsUrl = 'https://raw.githubusercontent.com/ruspix/news/main';
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news';
