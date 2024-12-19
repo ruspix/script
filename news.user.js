@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.2
+// @version      1.3
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
