@@ -173,7 +173,7 @@ function Modal(props) {
 				</button>
 			</div>
 			<div class="rp-modal__body">
-				${props.news.map(Article)}
+				${props.news.map(Article).reverse()}
 			</div>
 		</div
 	`
