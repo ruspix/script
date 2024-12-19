@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "checkJs": true,
-    "strict": true,
-    "types": ["./types"]
+    "strict": true
   },
-  "include": ["./*.js"]
+  "include": ["./*.js", "./*.ts"]
 }
