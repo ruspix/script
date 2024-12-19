@@ -37,9 +37,10 @@
 const { h, render } = preact;
 const html = htm.bind(h);
 
-const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
-// const newsUrl = 'http://localhost';
-const newsUrl = 'https://raw.githubusercontent.com/ruspix/news/main';
+const hostUrl = 'http://localhost';
+// const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+const newsUrl = 'http://localhost/news';
+// const newsUrl = 'https://raw.githubusercontent.com/ruspix/news/main';
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news';
 
@@ -57,7 +58,7 @@ async function main() {
 
 	const modal = addModal({
 		news: [],
-		show: false,
+		show: true,
 	});
 
 	button.root.addEventListener('click', () => {
@@ -65,9 +66,7 @@ async function main() {
 			setLastNewsAsLastViewed();
 		}
 
-		modal.update({
-			show: !modal.props.show,
-		});
+		modal.update({ show: !modal.props.show });
 	});
 
 	const modalCloseButton = modal.root.querySelector('.rp-modal__header-close');
@@ -171,10 +170,7 @@ function Modal(props) {
 		<div class="${clsx('rp-modal', props.show && 'show')}">
 			<div class="rp-modal__header">
 				<h1>Ruspixel News</h1>
-				<button
-					style="--mask-url: url("${addScriptRepoPrefix('/assets/close-icon.svg')}");"
-					class="rp-modal__header-close"
-				>
+				<button class="rp-modal__header-close">
 					<img src="${addScriptRepoPrefix('/assets/close-icon.svg')}"/>
 				</button>
 			</div>
@@ -193,20 +189,24 @@ function addModal(initial) {
 	document.body.appendChild(root);
 
 	let props = initial;
-	render(Modal(props), document.body, root)
+
+	/**
+		 * @param {Partial<IModalProps>} changes
+		 */
+	const update = changes => {
+		props = { ...props, ...changes };
+		render(Modal(props), document.body, root);
+		replaceArticleImages(root);
+	}
+	
+	update({});
 
 	return {
 		root,
 		get props() {
 			return props;
 		},
-		/**
-		 * @param {Partial<IModalProps>} changes
-		 */
-		update: changes => {
-			props = { ...props, ...changes };
-			render(Modal(props), document.body, root);
-		},
+		update,
 	}
 }
 
@@ -348,4 +348,68 @@ function setLastNewsAsLastViewed() {
  */
 function mergeMetasAndHtmls(metas, htmls) {
 	return metas.map((meta, i) => ({ ...meta, html: htmls[i] }));
+}
+
+/**
+ * @param {HTMLElement} el
+ */
+function replaceArticleImages(el) {
+	/** @type {HTMLElement[]} */
+	let articles;
+	if(el.classList.contains('rp-article')) {
+		articles = [el];
+	} else {
+		articles = Array.from(el.querySelectorAll('.rp-article'));
+	}
+
+	/** @type {HTMLImageElement[]} */
+	const images = [];
+	articles.forEach(article => {
+		images.push(...Array.from(article.querySelectorAll('img')));
+	});
+	
+	Array.from(images)
+	.filter(img => !img.hasAttribute('handled'))
+	.forEach(original => {
+		const parent = original.parentElement;
+		if(!parent) return;
+		render(html`
+			<div class="rp-article__content-image">
+				<img handled src="${original.src}"/>
+				<button
+					class="rp-article__content-image-download"
+					onclick=${() => void downloadImage(original.src)}
+				>
+					<img src="${addScriptRepoPrefix('/assets/download-icon.svg')}"/>
+				</button>
+			</div>
+		`, parent, original);
+		original.remove();
+	});
+
+}
+
+/**
+ * @param {string} url
+ * @param {string} fileName
+ */
+async function downloadImage(
+	url,
+	fileName = getFileNameFromUrl(url),
+) {
+	const res = await fetch(url);
+	const blob = await res.blob();
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = fileName;
+	link.click();
+	URL.revokeObjectURL(link.href);
+}
+
+/**
+ * @param {string} url
+ */
+function getFileNameFromUrl(url) {
+	const parts = new URL(url).pathname.split('/');
+	return parts[parts.length - 1];
 }
