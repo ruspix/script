@@ -50,7 +50,7 @@ if (document.readyState === "loading") {
 }
 
 async function main() {
-	addGlobalStyle();
+	await addGlobalStyle();
 	const button = addOpenButton();
 	const {
 		modal,
@@ -291,6 +291,10 @@ function addScriptRepoPrefix(path) {
 	return `${hostUrl}${path}`
 }
 
+/**
+ * @param {string} path
+ * @returns {string}
+ */
 function addScriptNewsRepoPrefix(path) {
 	return `${newsUrl}${path}`
 }
