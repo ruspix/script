@@ -128,7 +128,7 @@ function addModal() {
 	modal.appendChild(header);
 
 	const headerH1 = document.createElement('h1');
-	headerH1.innerText = 'Ruspuxel News';
+	headerH1.innerText = 'Ruspixel News';
 	header.appendChild(headerH1);
 
 	const closeButton = document.createElement('button');
