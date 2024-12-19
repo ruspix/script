@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.1
+// @version      1.2
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -39,6 +39,7 @@
 
 // const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+const newsUrl = 'https://raw.githubusercontent.com/ruspix/news/main';
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news';
 
@@ -225,7 +226,7 @@ async function addGlobalStyle() {
  * @returns {Promise<INewsMeta[]>}
  */
 async function fetchNewsList() {
-	const listUrl = addScriptRepoPrefix('/news/list.json');
+	const listUrl = addScriptNewsRepoPrefix(`/list.json`);
 	const res = await fetch(listUrl, { cache: "no-cache" });
 	return res.json();
 }
@@ -243,7 +244,7 @@ async function fetchAllNewsHTML(ids) {
  * @returns {Promise<string>}
  */
 async function fetchNewsHTML(id) {
-	const newsUrl = addScriptRepoPrefix(`/news/${id}.html`);
+	const newsUrl = addScriptNewsRepoPrefix(`/posts/${id}.html`);
 	const res = await fetch(newsUrl, { cache: "no-cache" });
 	return res.text();
 }
@@ -288,6 +289,10 @@ function loadLocalStorage() {
  */
 function addScriptRepoPrefix(path) {
 	return `${hostUrl}${path}`
+}
+
+function addScriptNewsRepoPrefix(path) {
+	return `${newsUrl}${path}`
 }
 
 function playNotification() {
