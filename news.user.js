@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.3
+// @version      1.4
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -9,6 +9,9 @@
 // @grant        GM_addStyle
 // @downloadURL  https://raw.githubusercontent.com/ruspix/script/main/news.user.js
 // @updateURL    https://raw.githubusercontent.com/ruspix/script/main/news.user.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/preact/10.25.3/preact.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/htm/3.1.1/htm.min.js
+// @require      https://cdn.jsdelivr.net/npm/clsx@2.1.1/dist/clsx.min.js
 // @connect      githubusercontent.com
 // @connect      github.com
 // @connect      fuckyouarkeros.fun
@@ -28,14 +31,11 @@
 // @match        *://globepixel.fun/*
 // ==/UserScript==
 
-/**
- * @typedef {import('./types').ILocalStorageData} ILocalStorageData
- * @typedef {import('./types').INewsMeta} INewsMeta
- * @typedef {import('./types').ICheckNewsListResponse} ICheckNewsListResponse
- */
-
 // TODO
 // handle case when modal opened and news updates
+
+const { h, render } = preact;
+const html = htm.bind(h);
 
 // const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
@@ -51,27 +51,28 @@ if (document.readyState === "loading") {
 
 async function main() {
 	await addGlobalStyle();
-	const button = addOpenButton();
-	const {
-		modal,
-		closeButton,
-		renderArticles,
-	} = addModal();
-
-	// bind modal handlers
-
-	button.addEventListener('click', () => {
-		if(modal.classList.contains('show')) {
-			modal.classList.remove('show');
-		} else {
-			modal.classList.add('show');
-			button.classList.remove('unchecked');
-			setLastNewsAsLastViewed();
-		}
+	const button = addOpenButton({
+		unchecked: false,
 	});
 
-	closeButton.addEventListener('click', () => {
-		modal.classList.remove('show');
+	const modal = addModal({
+		news: [],
+		show: false,
+	});
+
+	button.root.addEventListener('click', () => {
+		if(!modal.props.show) {
+			setLastNewsAsLastViewed();
+		}
+
+		modal.update({
+			show: !modal.props.show,
+		});
+	});
+
+	const modalCloseButton = modal.root.querySelector('.rp-modal__header-close');
+	modalCloseButton?.addEventListener('click', () => {
+		modal.update({ show: false });
 	});
 
 	const oldData = loadLocalStorage();
@@ -79,103 +80,133 @@ async function main() {
 		// set prev news if any
 		const metas = oldData.lastList;
 		const htmls = await fetchAllNewsHTML(metas);
-		renderArticles(metas, htmls);
+		modal.update({ news: mergeMetasAndHtmls(metas, htmls) });
 		
 		// check if prev news is viewed
 		if(oldData.lastViewedId !== oldData.lastList.at(-1)?.id) {
-			button.classList.add('unchecked');
+			button.update({ unchecked: true });
 		}
 	}
 
 	// check current news and set check interval
 	const checkIntervalCallback = async () => {
-		const checkResult = await checkNews();
-		if(!checkResult.updated) return;
+		const { updated, metas } = await checkNews();
+		if(!updated) return;
 
-		updateLocalStorage({
-			lastList: checkResult.metas,
-		});
+		updateLocalStorage({ lastList: metas });
 
 		playNotification();
-		const htmls = await fetchAllNewsHTML(checkResult.metas);
-		renderArticles(checkResult.metas, htmls);
-		button.classList.add('unchecked');
+		const htmls = await fetchAllNewsHTML(metas);
+		modal.update({ news: mergeMetasAndHtmls(metas, htmls) });
+		button.update({ unchecked: true });
 	}
 
 	checkIntervalCallback();
 	setInterval(checkIntervalCallback, checkInterval);
 }
 
-function addOpenButton() {
-	const button = document.createElement('button');
-	button.classList.add('rp-button');
-	
-	const icon = document.createElement('img');
-	icon.src = addScriptRepoPrefix('/assets/ruspixel-icon.png');
-	button.appendChild(icon);
-
-	document.body.appendChild(button);
-
-	return button;
+/**
+ * @param {IButtonProps} props 
+ */
+function Button(props) {
+	return html`
+		<button class="${clsx('rp-button', props.unchecked && 'unchecked')}">
+			<img src=${addScriptRepoPrefix('/assets/ruspixel-icon.png')}/>
+		</button>
+	`;
 }
 
-function addModal() {
-	const modal = document.createElement('div');
-	modal.classList.add('rp-modal');
+/**
+ * @param {IButtonProps} initial 
+ */
+function addOpenButton(initial) {
+	const root = document.createElement('button');
+	document.body.appendChild(root);
 
-	const header = document.createElement('div');
-	header.classList.add('rp-modal__header');
-	modal.appendChild(header);
-
-	const headerH1 = document.createElement('h1');
-	headerH1.innerText = 'Ruspixel News';
-	header.appendChild(headerH1);
-
-	const closeButton = document.createElement('button');
-	closeButton.style.setProperty(
-		'--mask-url',
-		`url("${addScriptRepoPrefix('/assets/close-icon.svg')}")`);
-	closeButton.classList.add('rp-modal__header-close');
-	header.appendChild(closeButton);
-
-	const closeIcon = document.createElement('img');
-	closeIcon.src = addScriptRepoPrefix('/assets/close-icon.svg');
-	closeButton.appendChild(closeIcon);
-
-	const body = document.createElement('div');
-	body.classList.add('rp-modal__body');
-	modal.appendChild(body);
-
-	document.body.appendChild(modal);
-
-	/**
-	 * @param {INewsMeta[]} metas 
-	 * @param {string[]} htmls 
-	 */
-	const renderArticles = (metas, htmls) => {
-		body.innerHTML = metas.map((meta, i) => {
-			return `
-				<article class="rp-article">	
-					<div class="rp-article__header">
-						<h1 class="rp-article__header-title">
-							${meta.title}
-						</h1>
-						<div class="rp-article__header-time">
-							${formatTime(meta.createdAt)}
-						</div>
-					</div>
-					<div class="rp-article__content">
-						${htmls[i]}
-					</div>
-				</article>
-			`;
-		}).reverse().join('');
-	}
+	let props = initial;
+	render(Button(props), document.body, root);
 
 	return {
-		modal,
-		closeButton,
-		renderArticles,
+		root,
+		get props() {
+			return props;
+		},
+		/**
+		 * @param {Partial<IButtonProps>} changes
+		 */
+		update: changes => {
+			props = { ...props, ...changes };
+			render(Button(props), document.body, root);
+		},
+	}
+}
+
+/**
+ * @param {IArticleProps} props
+ */
+function Article(props) {
+	return html`
+		<article class="rp-article">	
+			<div class="rp-article__header">
+				<h1 class="rp-article__header-title">
+					${props.title}
+				</h1>
+				<div class="rp-article__header-time">
+					${formatTime(props.createdAt)}
+				</div>
+			</div>
+			<div
+				class="rp-article__content"
+				dangerouslySetInnerHTML=${{ __html: props.html }}
+			></div>
+		</article>
+	`
+}
+
+/**
+ * @param {IModalProps} props 
+ */
+function Modal(props) {
+	return html`
+		<div class="${clsx('rp-modal', props.show && 'show')}">
+			<div class="rp-modal__header">
+				<h1>Ruspixel News</h1>
+				<button
+					style="--mask-url: url("${addScriptRepoPrefix('/assets/close-icon.svg')}");"
+					class="rp-modal__header-close"
+				>
+					<img src="${addScriptRepoPrefix('/assets/close-icon.svg')}"/>
+				</button>
+			</div>
+			<div class="rp-modal__body">
+				${props.news.map(Article)}
+			</div>
+		</div
+	`
+}
+
+/**
+ * @param {IModalProps} initial 
+ */
+function addModal(initial) {
+	const root = document.createElement('div');
+	document.body.appendChild(root);
+
+	let props = initial;
+	render(Modal(props), document.body, root)
+
+	return {
+		root,
+		get props() {
+			return props;
+		},
+		/**
+		 * @param {Partial<IModalProps>} changes
+		 */
+		update: changes => {
+			props = { ...props, ...changes };
+			render(Modal(props), document.body, root);
+		},
 	}
 }
 
@@ -309,4 +340,12 @@ function setLastNewsAsLastViewed() {
 
 	data.lastViewedId = data.lastList.at(-1)?.id ?? null;
 	saveLocalStorage(data);
+}
+
+/**
+ * @param {INewsMeta[]} metas 
+ * @param {string[]} htmls 
+ */
+function mergeMetasAndHtmls(metas, htmls) {
+	return metas.map((meta, i) => ({ ...meta, html: htmls[i] }));
 }
