@@ -58,15 +58,13 @@ async function main() {
 
 	const modal = addModal({
 		news: [],
-		show: true,
+		show: false,
 	});
 
 	button.root.addEventListener('click', () => {
-		if(!modal.props.show) {
-			setLastNewsAsLastViewed();
-		}
-
+		setLastNewsAsLastViewed();
 		modal.update({ show: !modal.props.show });
+		button.update({ unchecked: false });
 	});
 
 	const modalCloseButton = modal.root.querySelector('.rp-modal__header-close');
@@ -238,9 +236,15 @@ async function checkNews() {
 	}
 
 	const savedData = loadLocalStorage();
-	const lastSavedMeta = savedData?.lastList.at(-1);
+	if(!savedData) {
 		return {
-		updated: lastSavedMeta?.id !== lastNews.id,
+			updated: true,
+			metas: list,
+		}
+	}
+
+		return {
+		updated: JSON.stringify(savedData.lastList) !== JSON.stringify(list),
 		metas: list,
 	}
 }
