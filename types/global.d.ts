@@ -20,15 +20,16 @@ declare global {
   const clsx: (...inputs: clsx.ClassValue[]) => string;
 
   declare interface ILocalStorageData {
-    lastViewedId: string | null;
-    lastList: INewsMeta[];
+    lastViewedId: number | null;
+    lastList: INews[];
   }
   
   declare interface INewsMeta {
-    id: string;
+    id: number;
     title: string;
     description: string;
     createdAt: string;
+    updatedAt: string;
   }
 
   declare interface INews extends INewsMeta {
@@ -37,6 +38,7 @@ declare global {
   
   declare type ICheckNewsListResponse = {
     updated: boolean;
+		lastViewedMismatched: boolean;
     metas: INewsMeta[];
   }
   
@@ -50,6 +52,8 @@ declare global {
   declare interface IButtonProps {
     unchecked: boolean;
   }
+
+  declare type NewsLoadCallback = (list: INews[]) => void;
 }
 
 export {};

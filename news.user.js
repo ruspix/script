@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.5
+// @version      1.6
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -22,6 +22,7 @@
 // @connect      pixuniverse.fun
 // @connect      globepixel.fun
 // @connect      localhost
+// @connect      black-and-red.space
 // @match        *://fuckyouarkeros.fun/*
 // @match        *://pixelplanet.fun/*
 // @match        *://pixmap.fun/*
@@ -36,10 +37,11 @@ const html = htm.bind(h);
 
 // const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
-// const newsUrl = 'http://localhost/news';
-const newsUrl = 'https://raw.githubusercontent.com/ruspix/news/main';
+const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
-const localStorageKey = 'ruspixel-news';
+const localStorageKey = 'ruspixel-news-v2';
+const newsPerPage = 5;
+const newsToRemember = 5;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", main);
@@ -72,9 +74,8 @@ async function main() {
 	const oldData = loadLocalStorage();
 	if(oldData) {
 		// set prev news if any
-		const metas = oldData.lastList;
-		const htmls = await fetchAllNewsHTML(metas);
-		modal.update({ news: mergeMetasAndHtmls(metas, htmls) });
+		const news = oldData.lastList;
+		modal.update({ news });
 		
 		// check if prev news is viewed
 		if(oldData.lastViewedId !== oldData.lastList.at(-1)?.id) {
@@ -84,16 +85,23 @@ async function main() {
 
 	// check current news and set check interval
 	const checkIntervalCallback = async () => {
-		const { updated, metas } = await checkNews();
+		const {
+			updated,
+			metas,
+			lastViewedMismatched,
+		} = await checkNews();
 		if(!updated) return;
 
-		updateLocalStorage({ lastList: metas });
-		
-		const htmls = await fetchAllNewsHTML(metas);
-		modal.update({ news: mergeMetasAndHtmls(metas, htmls) });
-		
-		if(!modal.props.show) {
-			button.update({ unchecked: true });
+		const htmls = await fetchAllNewsHTML(metas)
+		const news = mergeMetasAndHtmls(metas, htmls);
+		updateLocalStorage({ lastList: news });
+		modal.update({ news });
+
+		if(lastViewedMismatched) {
+			if(!modal.props.show) {
+				button.update({ unchecked: true });
+			}
+
 			playNotification();
 		}
 	}
@@ -173,7 +181,7 @@ function Modal(props) {
 				</button>
 			</div>
 			<div class="rp-modal__body">
-				${props.news.map(Article).reverse()}
+				${sortNews(props.news).map(Article)}
 			</div>
 		</div
 	`
@@ -214,12 +222,12 @@ function addModal(initial) {
 function formatTime(time) {
 	const date = time instanceof Date ? time : new Date(time);
 	return (
-				date.getFullYear() + '-' +
-				(date.getMonth() + 1) + '-' + 
-				date.getDate() + ' ' + 
-				date.getHours() + ':' + 
-				date.getMinutes()
-			)
+		date.getFullYear() + '-' +
+		(date.getMonth() + 1) + '-' + 
+		date.getDate() + ' ' + 
+		date.getHours() + ':' + 
+		date.getMinutes()
+	)
 }
 
 /**
@@ -227,10 +235,11 @@ function formatTime(time) {
  */
 async function checkNews() {
 	const list = await fetchNewsList();
-	const lastNews = list.at(-1);
+	const lastNews = list.at(0);
 	if(!lastNews) {
 		return {
 			updated: false,
+			lastViewedMismatched: false,
 			metas: [],
 		}
 	}
@@ -239,12 +248,18 @@ async function checkNews() {
 	if(!savedData) {
 		return {
 			updated: true,
+			lastViewedMismatched: false,
 			metas: list,
 		}
 	}
 
-		return {
-		updated: JSON.stringify(savedData.lastList) !== JSON.stringify(list),
+	const lastViewedMismatched = lastNews.id !== savedData.lastViewedId;
+	const updated = savedData.lastList.some(
+		(old, i) => list[i].id !== old.id || list[i].updatedAt !== old.updatedAt );
+
+	return {
+		updated,
+		lastViewedMismatched,
 		metas: list,
 	}
 }
@@ -258,11 +273,27 @@ async function addGlobalStyle() {
 }
 
 /**
- * @returns {Promise<INewsMeta[]>}
+ * @param {string} path
+ * @param {RequestInit | undefined} options
+*/
+async function fetchApi(path, options = undefined) {
+	return fetch(apiUrl + path, options);
+}
+
+/**
+ * @param {{ limit?: number, offset?: number, html?: boolean }} options
+ * @returns {Promise<INews[]>}
  */
-async function fetchNewsList() {
-	const listUrl = addScriptNewsRepoPrefix(`/list.json`);
-	const res = await fetch(listUrl, { cache: "no-cache" });
+async function fetchNewsList({
+	offset = 0,
+	limit = newsPerPage,
+	html = false,
+} = {
+	offset: 0,
+	limit: newsPerPage,
+	html: false,
+}) {
+	const res = await fetchApi(`/news?limit=${limit}&offset=${offset}&html=${html}`);
 	return res.json();
 }
 
@@ -275,12 +306,11 @@ async function fetchAllNewsHTML(ids) {
 
 /**
  * 
- * @param {string} id 
+ * @param {number} id
  * @returns {Promise<string>}
  */
 async function fetchNewsHTML(id) {
-	const newsUrl = addScriptNewsRepoPrefix(`/posts/${id}.html`);
-	const res = await fetch(newsUrl, { cache: "no-cache" });
+	const res = await fetchApi(`/news/html/${id}`);
 	return res.text();
 }
 
@@ -326,14 +356,6 @@ function addScriptRepoPrefix(path) {
 	return `${hostUrl}${path}`
 }
 
-/**
- * @param {string} path
- * @returns {string}
- */
-function addScriptNewsRepoPrefix(path) {
-	return `${newsUrl}${path}`
-}
-
 function playNotification() {
 	return new Audio(addScriptRepoPrefix('/assets/notification-sound.mp3')).play();
 }
@@ -342,7 +364,7 @@ function setLastNewsAsLastViewed() {
 	const data = loadLocalStorage();
 	if(!data) return;
 
-	data.lastViewedId = data.lastList.at(-1)?.id ?? null;
+	data.lastViewedId = data.lastList.at(0)?.id ?? null;
 	saveLocalStorage(data);
 }
 
@@ -416,4 +438,11 @@ async function downloadImage(
 function getFileNameFromUrl(url) {
 	const parts = new URL(url).pathname.split('/');
 	return parts[parts.length - 1];
+}
+
+/**
+ * @param {INews[]} news
+ */
+function sortNews(news) {
+	return news.slice(0).sort((a, b) => b.id - a.id);
 }
