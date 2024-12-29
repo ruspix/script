@@ -78,7 +78,11 @@ async function main() {
 		modal.update({ news });
 		
 		// check if prev news is viewed
-		if(oldData.lastViewedId !== oldData.lastList.at(-1)?.id) {
+		if(
+			oldData.lastList.length > 0 &&
+			oldData.lastViewedId !== null &&
+			oldData.lastViewedId < oldData.lastList[0].id
+		) {
 			button.update({ unchecked: true });
 		}
 	}
@@ -253,7 +257,11 @@ async function checkNews() {
 		}
 	}
 
-	const lastViewedMismatched = lastNews.id !== savedData.lastViewedId;
+	const lastViewedMismatched = (
+		savedData.lastViewedId !== null &&
+		lastNews.id > savedData.lastViewedId
+	);
+
 	const updated = savedData.lastList.some(
 		(old, i) => list[i].id !== old.id || list[i].updatedAt !== old.updatedAt );
 
