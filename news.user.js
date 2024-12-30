@@ -40,7 +40,7 @@ const hostUrl = 'http://localhost';
 const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
-const newsPerPage = 5;
+const newsPerPage = 20;
 const newsToRemember = 5;
 
 if (document.readyState === "loading") {
