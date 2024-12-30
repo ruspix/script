@@ -106,12 +106,20 @@
 	height: 100%;
 	display: flex;
 	flex-flow: column;
-	gap: 30px;
+	gap: 15px;
 	overflow-y: scroll;
 	overflow-x: hidden;
 }
 
 .rp-article {}
+
+.rp-article-delimiter {
+	display: block;
+	width: 100%;
+	height: 0px;
+	border-bottom: darkred 1px solid;
+	opacity: 0.6;
+}
 
 .rp-article__header {
 	position: relative;

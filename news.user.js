@@ -35,8 +35,8 @@
 const { h, render } = preact;
 const html = htm.bind(h);
 
-// const hostUrl = 'http://localhost';
-const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+const hostUrl = 'http://localhost';
+// const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
 const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
@@ -172,6 +172,12 @@ function Article(props) {
 	`
 }
 
+function ArticleDelimiter() {
+	return html`
+		<hr class="rp-article-delimiter"/>
+	`
+}
+
 /**
  * @param {IModalProps} props 
  */
@@ -185,7 +191,12 @@ function Modal(props) {
 				</button>
 			</div>
 			<div class="rp-modal__body">
-				${sortNews(props.news).map(Article)}
+				${
+					sortNews(props.news)
+					.map(item => [Article(item), ArticleDelimiter()])
+					.flat()
+					.slice(0, -1)
+				}
 			</div>
 		</div
 	`
