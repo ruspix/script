@@ -12,6 +12,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/preact/10.25.3/preact.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/htm/3.1.1/htm.min.js
 // @require      https://cdn.jsdelivr.net/npm/clsx@2.1.1/dist/clsx.min.js
+// @require      https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js
 // @connect      githubusercontent.com
 // @connect      github.com
 // @connect      fuckyouarkeros.fun
@@ -162,6 +163,10 @@ function Article(props) {
 				</h1>
 				<div class="rp-article__header-time">
 					${formatTime(props.createdAt)}
+					${
+						props.updatedAt !== props.createdAt &&
+						` (updated ${formatTime(props.updatedAt)})`
+					}
 				</div>
 			</div>
 			<div
@@ -232,17 +237,11 @@ function addModal(initial) {
 }
 
 /**
- * @param {string | Date} time 
+ * @param {string | Date} time
+ * @returns {string}
  */
 function formatTime(time) {
-	const date = time instanceof Date ? time : new Date(time);
-	return (
-		date.getFullYear() + '-' +
-		(date.getMonth() + 1) + '-' + 
-		date.getDate() + ' ' + 
-		date.getHours() + ':' + 
-		date.getMinutes()
-	)
+	return dayjs(time).format('YYYY-MM-DD hh:mm');
 }
 
 /**

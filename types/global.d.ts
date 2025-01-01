@@ -1,5 +1,5 @@
-import preactType from 'preact';
-import clsx from 'clsx';
+import type preact from 'preact';
+import type dayjs from 'dayjs';
 
 declare namespace clsx {
 	type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
@@ -15,7 +15,9 @@ declare global {
     ): (strings: TemplateStringsArray, ...values: any[]) => HResult | HResult[];
   }
   
-  const peact: preactType;
+  const peact: preact;
+
+  const dayjs: dayjs;
 
   const clsx: (...inputs: clsx.ClassValue[]) => string;
 
