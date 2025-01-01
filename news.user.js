@@ -41,7 +41,7 @@ const apiUrl = 'http://localhost/ruspixel';
 // const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
-const newsPerPage = 20;
+const newsPerPage = 6;
 const newsToRemember = 5;
 
 if (document.readyState === "loading") {
@@ -78,6 +78,44 @@ async function main() {
 		modal.update({ show: false });
 	});
 
+	let historyIsLoading = false;
+	let allLoaded = false;
+	modal.body.addEventListener('scroll', () => {
+		const scrollBottom = (
+			modal.body.scrollHeight -
+			modal.body.scrollTop -
+			modal.body.clientHeight
+		);
+
+		if(
+			scrollBottom > 200 ||
+			historyIsLoading ||
+			allLoaded
+		) return;
+
+		historyIsLoading = true;
+
+		fetchNewsList({
+			html: true,
+			offset: newsList.length,
+		})
+		.then(list => {
+			if(
+				list.length === 0 ||
+				list.some(({ id }) => id === 1)
+			) {
+				allLoaded = true;
+				return;
+			}
+
+			newsList.push(...list);
+			uniqueNews(newsList);
+			sortNews(newsList);
+			modal.update({ news: newsList });
+		})
+		.finally(() => historyIsLoading = false);
+	});
+
 	newsList = await fetchNewsList({ html: true });
 	modal.update({ news: newsList });
 
@@ -97,6 +135,7 @@ async function main() {
 		newsList.unshift(parsed);
 		modal.update({ news: newsList });
 		button.update({ unchecked: true });
+		playNotification();
 	});
 
 	sse.addEventListener('update-news', msg => {
@@ -217,10 +256,10 @@ function addModal(initial) {
 	document.body.appendChild(root);
 
 	let props = initial;
-
+	
 	/**
-		 * @param {Partial<IModalProps>} changes
-		 */
+	 * @param {Partial<IModalProps>} changes
+	*/
 	const update = changes => {
 		props = { ...props, ...changes };
 		render(Modal(props), document.body, root);
@@ -229,8 +268,13 @@ function addModal(initial) {
 	
 	update({});
 
+	/** @type {HTMLDivElement | null} */
+	const body = root.querySelector('div.rp-modal__body');
+	if(!body) throw new Error('cant find modal body');
+
 	return {
 		root,
+		body,
 		get props() {
 			return props;
 		},
@@ -435,6 +479,18 @@ function getFileNameFromUrl(url) {
  */
 function sortNews(news) {
 	return news.sort((a, b) => b.id - a.id);
+}
+
+/**
+ * @param {INews[]} news
+ */
+function uniqueNews(news) {
+	news.forEach((item, i) => {
+		const firstIndex = news.findIndex(({ id }) => item.id === id);
+		if(firstIndex === i) return;
+		news.splice(i, 1);
+	});
+	return news;
 }
 
 /**
