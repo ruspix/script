@@ -113,6 +113,13 @@
 
 .rp-article {}
 
+.rp-article ol,
+.rp-article ul {
+	display: flex;
+	flex-flow: column;
+	gap: 5px;
+}
+
 .rp-article-delimiter {
 	display: block;
 	width: 100%;
