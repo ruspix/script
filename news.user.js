@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.7
+// @version      1.8
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -37,8 +37,8 @@ const html = htm.bind(h);
 
 // const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
-const apiUrl = 'http://localhost/ruspixel';
-// const apiUrl = 'https://black-and-red.space/ruspixel'
+// const apiUrl = 'http://localhost/ruspixel';
+const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
 const newsPerPage = 6;
