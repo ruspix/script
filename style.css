@@ -37,6 +37,16 @@
 	object-fit: contain;
 }
 
+.rp-modal a {
+	font-weight: bold !important;
+	color: red !important;
+	transition: text-shadow 0.25s;
+}
+
+.rp-modal a:hover {
+	text-shadow: 0 0 15px red;
+}
+
 .rp-button,
 .rp-modal,
 .rp-modal .tippy-box {
@@ -161,11 +171,8 @@
 
 .rp-article {}
 
-.rp-article ol,
-.rp-article ul {
-	display: flex;
-	flex-flow: column;
-	gap: 5px;
+.rp-article p {
+	line-height: 1.8rem;
 }
 
 .rp-article-delimiter {
@@ -196,9 +203,6 @@
 
 .rp-article__content {
 	padding-left: 10px;
-	display: flex;
-	flex-flow: column;
-	gap: 5px;
 }
 
 .rp-article__content :where(ul, ol) {
