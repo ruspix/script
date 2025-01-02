@@ -319,10 +319,10 @@ function initInfoPopover(selector) {
 			<div class="rp-modal__header-info-popover">
 				<div>
 					<p style="margin-bottom: 5px;">
-						This script and other software were created for free by <span class="rp-modal__bold">Darkness</span>.
+						Этот скрипт и другие технологии были созданы бесплатно человеком с ником <span class="rp-modal__bold">Darkness</span>.
 					</p>
 					<p>
-						However, I would greatly appreciate a donations as a token of gratitude and to help cover the server costs needed to keep the website and script running.
+						Мы были бы очень признательны за пожертвования в знак благодарности и для того, чтобы помочь покрыть расходы на сервер, необходимые для поддержания работоспособности веб-сайта и скрипта.
 					</p>
 				</div>
 				<div class="rp-modal__header-info-popover-links">
