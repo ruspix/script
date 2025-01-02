@@ -38,7 +38,8 @@
 }
 
 .rp-button,
-.rp-modal {
+.rp-modal,
+.rp-modal .tippy-box {
 	background-color: rgba(0,0,0,0.9);
 	border: darkred 1px solid;
 }
@@ -64,18 +65,20 @@
 }
 
 .rp-modal {
-	opacity: 1;
-	color: white;
-	z-index: 9999;
-	position: fixed;
 	padding: 10px;
 	border-radius: 5px;
+	color: white;
+}
+
+.rp-modal {
+	opacity: 1;
+	z-index: 9998;
+	position: fixed;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
 	width: calc(100vw - 10%);
 	height: calc(100vh - 10%);
-	transition: opacity 0.25s;
 	display: grid;
 	grid-template-rows: auto 1fr;
 	gap: 10px;
@@ -105,15 +108,45 @@
 	margin-left: 2px;
 }
 
-.rp-modal__header-close {
+.rp-modal__header-menu {
 	position: absolute;
+	display: flex;
 	top: 50%;
 	right: 0;
 	transform: translate(0, -50%);
+}
+
+.rp-modal__header-close,
+.rp-modal__header-info {
+	color: red;
+	font-size: 20px;
+	font-family: monospace;
 	cursor: pointer;
 	user-select: none;
 	width: 40px;
 	height: 40px;
+}
+
+.rp-modal__header-info {
+	position: relative;
+}
+
+.rp-modal__header-info-popover {
+	display: flex;
+	gap: 5px;
+	width: 300px;
+}
+
+.rp-modal__header-info-popover-links {
+	display: flex;
+	flex-flow: column;
+	gap: 5px;
+	justify-content: space-evenly;
+}
+
+.rp-modal__header-info-popover-link {
+	width: 24px;
+	height: 24px;
 }
 
 .rp-modal__body {
@@ -143,12 +176,14 @@
 	opacity: 0.6;
 }
 
-.rp-article__header {
-	position: relative;
-}
+.rp-article__header {}
 
 .rp-article__header-title {
 	width: 100%;
+}
+
+.rp-modal__bold {
+	font-weight: bold;
 }
 
 .rp-article__header-time {

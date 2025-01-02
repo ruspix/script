@@ -1,5 +1,6 @@
 import type preact from 'preact';
 import type dayjs from 'dayjs';
+import type tippy from 'tippy';
 
 declare namespace clsx {
 	type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
@@ -18,6 +19,8 @@ declare global {
   const peact: preact;
 
   const dayjs: dayjs;
+
+  const tippy: tippy;
 
   const clsx: (...inputs: clsx.ClassValue[]) => string;
 

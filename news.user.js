@@ -13,6 +13,8 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/htm/3.1.1/htm.min.js
 // @require      https://cdn.jsdelivr.net/npm/clsx@2.1.1/dist/clsx.min.js
 // @require      https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js
+// @require      https://unpkg.com/@popperjs/core@2
+// @require      https://unpkg.com/tippy.js@6
 // @connect      githubusercontent.com
 // @connect      github.com
 // @connect      fuckyouarkeros.fun
@@ -245,9 +247,14 @@ function Modal(props) {
 			<div class="rp-modal__header">
 				<p class="rp-modal__header-online">online: ${props.online ?? '-'}</p>
 				<h1>Ruspixel News</h1>
-				<button class="rp-modal__header-close">
-					<img src="${addScriptRepoPrefix('/assets/close-icon.svg')}"/>
-				</button>
+				<div class="rp-modal__header-menu">
+					<button class="rp-modal__header-info">
+						i
+					</button>
+					<button class="rp-modal__header-close">
+						<img src="${addScriptRepoPrefix('/assets/close-icon.svg')}"/>
+					</button>
+				</div>
 			</div>
 			<hr class="rp-modal__hr"/>
 			<div class="rp-modal__body">
@@ -282,6 +289,8 @@ function addModal(initial) {
 	
 	update({});
 
+	initInfoPopover('.rp-modal__header-info');
+
 	/** @type {HTMLDivElement | null} */
 	const body = root.querySelector('div.rp-modal__body');
 	if(!body) throw new Error('cant find modal body');
@@ -294,6 +303,54 @@ function addModal(initial) {
 		},
 		update,
 	}
+}
+
+/** @param {string} selector */
+function initInfoPopover(selector) {
+	tippy(selector, {
+		maxWidth: 'none',
+		allowHTML: true,
+		trigger: 'click',
+		arrow: false,
+		interactive: true,
+		hideOnClick: 'toggle',
+		placement: 'right-end',
+		content: `
+			<div class="rp-modal__header-info-popover">
+				<div>
+					<p style="margin-bottom: 5px;">
+						This script and other software were created for free by <span class="rp-modal__bold">Darkness</span>.
+					</p>
+					<p>
+						However, I would greatly appreciate a donations as a token of gratitude and to help cover the server costs needed to keep the website and script running.
+					</p>
+				</div>
+				<div class="rp-modal__header-info-popover-links">
+					<a
+						href="https://discord.com/users/584671022918402049"
+						target="_blank"
+						class="rp-modal__header-info-popover-link"
+					>
+						<img src="${addScriptRepoPrefix('/assets/discord.svg')}" alt="discord logo"/>
+					</a>
+					<a
+						href="https://boosty.to/touchedbydarkness"
+						target="_blank"
+						class="rp-modal__header-info-popover-link"
+					>
+						<img src="${addScriptRepoPrefix('/assets/donut.svg')}" alt="boosty logo"/>
+					</a>
+					<a
+						href="https://github.com/TouchedByDarkness"
+						target="_blank"
+						class="rp-modal__header-info-popover-link"
+					>
+						<img src="${addScriptRepoPrefix('/assets/github.svg')}" alt="github logo"/>
+					</a>
+				</div>
+			</div>
+		`
+	});
 }
 
 /**
