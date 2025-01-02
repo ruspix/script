@@ -246,7 +246,7 @@ function Modal(props) {
 		<div class="${clsx('rp-modal', props.show && 'show')}">
 			<div class="rp-modal__header">
 				<p class="rp-modal__header-online">online: ${props.online ?? '-'}</p>
-				<h1>Ruspixel News</h1>
+				<h1>Новости Ruspixel</h1>
 				<div class="rp-modal__header-menu">
 					<button class="rp-modal__header-info">
 						i
