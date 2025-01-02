@@ -48,6 +48,7 @@ declare global {
   declare interface IModalProps {
     show: boolean;
     news: INews[];
+    online: number | null;
   }
 
   declare interface IButtonProps {
@@ -59,7 +60,8 @@ declare global {
   type SSEEvents = (
     'create-news' |
     'update-news' |
-    'delete-news'
+    'delete-news' |
+    'update-online'
   )
 
   declare type SSE = {

@@ -88,13 +88,28 @@
 }
 
 .rp-modal__header {
-	padding-bottom: 10px;
-	border-bottom: 1px solid darkred;
-	display: grid;
-	grid-template-columns: 1fr auto;
+	position: relative;
+	display: flex;
+	flex-flow: column;
+}
+
+.rp-modal__hr {
+	height: 1px;
+	background-color: darkred;
+}
+
+.rp-modal__header-online {
+	font-family: monospace;
+	opacity: 0.5;
+	font-size: smaller;
+	margin-left: 2px;
 }
 
 .rp-modal__header-close {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	transform: translate(0, -50%);
 	cursor: pointer;
 	user-select: none;
 	width: 40px;

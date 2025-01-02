@@ -59,6 +59,7 @@ async function main() {
 
 	const modal = addModal({
 		news: [],
+		online: null,
 		show: false,
 	});
 
@@ -159,6 +160,12 @@ async function main() {
 		newsList.splice(deletedIndex, 1);
 		modal.update({ news: newsList });
 	});
+
+	sse.addEventListener('update-online', msg => {
+		/** @type {{ ips: number }} */
+		const parsed = JSON.parse(msg.data);
+		modal.update({ online: parsed.ips });
+	});
 }
 
 /**
@@ -236,11 +243,13 @@ function Modal(props) {
 	return html`
 		<div class="${clsx('rp-modal', props.show && 'show')}">
 			<div class="rp-modal__header">
+				<p class="rp-modal__header-online">online: ${props.online ?? '-'}</p>
 				<h1>Ruspixel News</h1>
 				<button class="rp-modal__header-close">
 					<img src="${addScriptRepoPrefix('/assets/close-icon.svg')}"/>
 				</button>
 			</div>
+			<hr class="rp-modal__hr"/>
 			<div class="rp-modal__body">
 				${
 					sortNews(props.news.slice(0))
