@@ -23,7 +23,6 @@ declare global {
 
   declare interface ILocalStorageData {
     lastViewedId: number | null;
-    lastList: INews[];
   }
   
   declare interface INewsMeta {
@@ -56,6 +55,19 @@ declare global {
   }
 
   declare type NewsLoadCallback = (list: INews[]) => void;
+  
+  type SSEEvents = (
+    'create-news' |
+    'update-news' |
+    'delete-news'
+  )
+
+  declare type SSE = {
+    addEventListener<E extends SSEEvents>(
+      event: E,
+      handler: (msg: MessageEvent) => void,
+    ): void;
+  }
 }
 
 export {};

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.7
+// @version      1.8
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -38,6 +38,7 @@ const html = htm.bind(h);
 
 // const hostUrl = 'http://localhost';
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
+// const apiUrl = 'http://localhost/ruspixel';
 const apiUrl = 'https://black-and-red.space/ruspixel'
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
@@ -61,8 +62,14 @@ async function main() {
 		show: false,
 	});
 
+	/** @type {INews[]} */
+	let newsList = [];
+
 	button.root.addEventListener('click', () => {
-		setLastNewsAsLastViewed();
+		if(newsList.length) {
+			setLastViewed(newsList[0].id);
+		}
+
 		modal.update({ show: !modal.props.show });
 		button.update({ unchecked: false });
 	});
@@ -72,47 +79,86 @@ async function main() {
 		modal.update({ show: false });
 	});
 
-	const oldData = loadLocalStorage();
-	if(oldData) {
-		// set prev news if any
-		const news = oldData.lastList;
-		modal.update({ news });
-		
-		// check if prev news is viewed
+	let historyIsLoading = false;
+	let allLoaded = false;
+	modal.body.addEventListener('scroll', () => {
+		const scrollBottom = (
+			modal.body.scrollHeight -
+			modal.body.scrollTop -
+			modal.body.clientHeight
+		);
+
 		if(
-			oldData.lastList.length > 0 &&
-			oldData.lastViewedId !== null &&
-			oldData.lastViewedId < oldData.lastList[0].id
-		) {
-			button.update({ unchecked: true });
-		}
-	}
+			scrollBottom > 200 ||
+			historyIsLoading ||
+			allLoaded
+		) return;
 
-	// check current news and set check interval
-	const checkIntervalCallback = async () => {
-		const {
-			updated,
-			metas,
-			lastViewedMismatched,
-		} = await checkNews();
-		if(!updated) return;
+		historyIsLoading = true;
 
-		const htmls = await fetchAllNewsHTML(metas)
-		const news = mergeMetasAndHtmls(metas, htmls);
-		updateLocalStorage({ lastList: news });
-		modal.update({ news });
-
-		if(lastViewedMismatched) {
-			if(!modal.props.show) {
-				button.update({ unchecked: true });
+		fetchNewsList({
+			html: true,
+			offset: newsList.length,
+		})
+		.then(list => {
+			if(
+				list.length === 0 ||
+				list.some(({ id }) => id === 1)
+			) {
+				allLoaded = true;
+				return;
 			}
 
-			playNotification();
-		}
+			newsList.push(...list);
+			uniqueNews(newsList);
+			sortNews(newsList);
+			modal.update({ news: newsList });
+		})
+		.finally(() => historyIsLoading = false);
+	});
+
+	newsList = await fetchNewsList({ html: true });
+	modal.update({ news: newsList });
+
+	const lastViewedId = loadLocalStorage()?.lastViewedId ?? null;
+	if(
+		lastViewedId !== null &&
+		lastViewedId < newsList[0].id
+	) {
+		button.update({ unchecked: true });
 	}
 
-	checkIntervalCallback();
-	setInterval(checkIntervalCallback, checkInterval);
+	const sse = connectSSE();
+	
+	sse.addEventListener('create-news', msg => {
+		/** @type {INews} */
+		const parsed = JSON.parse(msg.data);
+		newsList.unshift(parsed);
+		modal.update({ news: newsList });
+		button.update({ unchecked: true });
+		playNotification();
+	});
+
+	sse.addEventListener('update-news', msg => {
+		/** @type {INews} */
+		const parsed = JSON.parse(msg.data);
+		const updateIndex = newsList.findIndex(({ id }) => parsed.id === id);
+		if(updateIndex === -1) {
+			console.warn('cant find news in list', parsed);
+			return;
+		}
+
+		newsList[updateIndex] = parsed;
+		modal.update({ news: newsList });
+	});
+
+	sse.addEventListener('delete-news', msg => {
+		const deletedId = +msg.data;
+		const deletedIndex = newsList.findIndex(({ id }) => id === deletedId);
+		if(deletedId === -1) return;
+		newsList.splice(deletedIndex, 1);
+		modal.update({ news: newsList });
+	});
 }
 
 /**
@@ -197,7 +243,7 @@ function Modal(props) {
 			</div>
 			<div class="rp-modal__body">
 				${
-					sortNews(props.news)
+					sortNews(props.news.slice(0))
 					.map(item => [Article(item), ArticleDelimiter()])
 					.flat()
 					.slice(0, -1)
@@ -215,10 +261,10 @@ function addModal(initial) {
 	document.body.appendChild(root);
 
 	let props = initial;
-
+	
 	/**
-		 * @param {Partial<IModalProps>} changes
-		 */
+	 * @param {Partial<IModalProps>} changes
+	*/
 	const update = changes => {
 		props = { ...props, ...changes };
 		render(Modal(props), document.body, root);
@@ -227,8 +273,13 @@ function addModal(initial) {
 	
 	update({});
 
+	/** @type {HTMLDivElement | null} */
+	const body = root.querySelector('div.rp-modal__body');
+	if(!body) throw new Error('cant find modal body');
+
 	return {
 		root,
+		body,
 		get props() {
 			return props;
 		},
@@ -242,44 +293,6 @@ function addModal(initial) {
  */
 function formatTime(time) {
 	return dayjs(time).format('YYYY-MM-DD hh:mm');
-}
-
-/**
- * @returns {Promise<ICheckNewsListResponse>}
- */
-async function checkNews() {
-	const list = await fetchNewsList();
-	const lastNews = list.at(0);
-	if(!lastNews) {
-		return {
-			updated: false,
-			lastViewedMismatched: false,
-			metas: [],
-		}
-	}
-
-	const savedData = loadLocalStorage();
-	if(!savedData) {
-		return {
-			updated: true,
-			lastViewedMismatched: false,
-			metas: list,
-		}
-	}
-
-	const lastViewedMismatched = (
-		savedData.lastViewedId !== null &&
-		lastNews.id > savedData.lastViewedId
-	);
-
-	const updated = savedData.lastList.some(
-		(old, i) => list[i].id !== old.id || list[i].updatedAt !== old.updatedAt );
-
-	return {
-		updated,
-		lastViewedMismatched,
-		metas: list,
-	}
 }
 
 async function addGlobalStyle() {
@@ -346,7 +359,6 @@ function updateLocalStorage(changes) {
 function getInitialLocalStorageData() {
 	return {
 		lastViewedId: null,
-		lastList: [],
 	}
 }
 
@@ -378,11 +390,14 @@ function playNotification() {
 	return new Audio(addScriptRepoPrefix('/assets/notification-sound.mp3')).play();
 }
 
-function setLastNewsAsLastViewed() {
+/**
+ * @param {number} id 
+ */
+function setLastViewed(id) {
 	const data = loadLocalStorage();
 	if(!data) return;
 
-	data.lastViewedId = data.lastList.at(0)?.id ?? null;
+	data.lastViewedId = id;
 	saveLocalStorage(data);
 }
 
@@ -462,5 +477,25 @@ function getFileNameFromUrl(url) {
  * @param {INews[]} news
  */
 function sortNews(news) {
-	return news.slice(0).sort((a, b) => b.id - a.id);
+	return news.sort((a, b) => b.id - a.id);
+}
+
+/**
+ * @param {INews[]} news
+ */
+function uniqueNews(news) {
+	news.forEach((item, i) => {
+		const firstIndex = news.findIndex(({ id }) => item.id === id);
+		if(firstIndex === i) return;
+		news.splice(i, 1);
+	});
+	return news;
+}
+
+/**
+ * @returns {SSE}
+ */
+function connectSSE(
+) {
+	return new EventSource(`${apiUrl}/news/updates`);
 }
