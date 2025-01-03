@@ -25,7 +25,7 @@ declare global {
     addFile: (
       file: File,
       title: string,
-      canvasId: number,
+      canvasId: string,
       x: number,
       y: number,
     ) => void;
@@ -107,7 +107,7 @@ declare global {
   declare interface ITemplate {
     src: string;
     canvas: Canvases;
-    subCanvas?: number;
+    subCanvas?: string;
     name: string;
     x: number;
     y: number;

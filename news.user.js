@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.10
+// @version      1.11
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -625,7 +625,7 @@ function parseTemplateSource(src) {
 		return {
 			src,
 			canvas,
-			subCanvas: +subCanvas,
+			subCanvas,
 			name,
 			x: +x,
 			y: +y,
@@ -650,7 +650,7 @@ async function addTemplate(template) {
 	templateLoader.addFile(
 		file,
 		template.name,
-		template.subCanvas ?? 0,
+		template.subCanvas ?? '0',
 		template.x,
 		template.y
 	);
@@ -698,7 +698,8 @@ async function updateTemplate(template) {
 async function loadFile(src) {
 	const res = await fetch(src);
 	const data = await res.blob();
-	return new File([data], "test.jpg", {
+	const filename = getFilenameFromUrl(src);
+	return new File([data], filename, {
 		type: res.headers.get('Content-Type') ?? 'image/png',
 	});
 }
