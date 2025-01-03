@@ -498,15 +498,52 @@ function replaceArticleImages(el) {
 	.forEach(original => {
 		const parent = original.parentElement;
 		if(!parent) return;
+
+		const src = original.src;
+
+		/** @type {ITemplate | null} */
+		let template = null;
+		try {
+			template = parseTemplateSource(src)
+		} catch (e) {
+			console.warn(`error while parsing template "${src}"`);
+			console.warn(e);
+		}
+
+		const onAddTemplate = () => {
+			if(!template) return;
+
+			if(isTemplateExists(template)) {
+				updateTemplate(template);
+				console.log(`template "${template.name}" updated`);
+			} else {
+				addTemplate(template);
+				console.log(`template "${template.name}" added`);
+			}
+		}
+
 		render(html`
 			<div class="rp-article__content-image">
 				<img handled src="${original.src}"/>
-				<button
-					class="rp-article__content-image-download"
-					onclick=${() => void downloadImage(original.src)}
-				>
-					<img src="${addScriptRepoPrefix('/assets/download-icon.svg')}"/>
-				</button>
+				<div class="rp-article__content-image-menu">
+					<button
+						title="download template"
+						onclick=${() => void downloadImage(src)}
+					>
+						<img src="${addScriptRepoPrefix('/assets/download-icon.svg')}"/>
+					</button>
+					${ template &&
+						html`
+							<button
+								title="add template to ppf"
+								onclick=${onAddTemplate}
+								class="rp-article__content-image-add-template"
+							>
+								<img src="${addScriptRepoPrefix('/assets/plus-icon.svg')}"/>
+							</button>
+						`
+					}
+				</div>
 			</div>
 		`, parent, original);
 		original.remove();
@@ -516,17 +553,17 @@ function replaceArticleImages(el) {
 
 /**
  * @param {string} url
- * @param {string} fileName
+ * @param {string} filename
  */
 async function downloadImage(
 	url,
-	fileName = getFileNameFromUrl(url),
+	filename = getFilenameFromUrl(url),
 ) {
 	const res = await fetch(url);
 	const blob = await res.blob();
 	const link = document.createElement('a');
 	link.href = URL.createObjectURL(blob);
-	link.download = fileName;
+	link.download = filename;
 	link.click();
 	URL.revokeObjectURL(link.href);
 }
@@ -534,7 +571,7 @@ async function downloadImage(
 /**
  * @param {string} url
  */
-function getFileNameFromUrl(url) {
+function getFilenameFromUrl(url) {
 	const parts = new URL(url).pathname.split('/');
 	return parts[parts.length - 1];
 }
@@ -564,4 +601,104 @@ function uniqueNews(news) {
 function connectSSE(
 ) {
 	return new EventSource(`${apiUrl}/news/updates`);
+}
+
+/**
+ * @param {string} src
+ * @returns {ITemplate}
+ */
+function parseTemplateSource(src) {
+	const filename = removeExtensionFromFilename(getFilenameFromUrl(src));
+	const [version, ...rest] = filename.split('_');
+
+	if(+version === 0) {
+		const [
+			canvas,
+			subCanvas,
+			name,
+			x,
+			y,
+		] = rest;
+
+		if(canvas !== 'ppf') throw new Error('invalid canvas name');
+	
+		return {
+			src,
+			canvas,
+			subCanvas: +subCanvas,
+			name,
+			x: +x,
+			y: +y,
+		}
+	}
+	
+	throw new Error('invalid template filename version');
+}
+
+/**
+ * @param {string} filename
+ */
+function removeExtensionFromFilename(filename) {
+	return filename.split('.')[0];
+}
+
+/**
+ * @param {ITemplate} template 
+ */
+async function addTemplate(template) {
+	const file = await loadFile(template.src);
+	templateLoader.addFile(
+		file,
+		template.name,
+		template.subCanvas ?? 0,
+		template.x,
+		template.y
+	);
+}
+
+/**
+ * @param {ITemplate} template 
+ */
+function isTemplateExists(template) {
+	return findTemplate(template) !== undefined;
+}
+
+/**
+ * @param {ITemplate} template 
+ */
+function findTemplate(template) {
+	const list = getNativeTemplates();
+	return list.find(t => template.name === t.title);
+}
+
+/**
+ * @returns {INativeTemplate[]}
+ */
+function getNativeTemplates() {
+	return JSON.parse(JSON.parse(localStorage['persist:tem']).list);
+}
+
+/**
+ * @param {ITemplate} template 
+ */
+async function updateTemplate(template) {
+	const found = findTemplate(template);
+	if(!found) {
+		console.warn('cant find template to update');
+		return;
+	}
+
+	const file = await loadFile(template.src);
+	templateLoader.updateFile(found.imageId, file);
+}
+
+/**
+ * @param {string} src
+ */
+async function loadFile(src) {
+	const res = await fetch(src);
+	const data = await res.blob();
+	return new File([data], "test.jpg", {
+		type: res.headers.get('Content-Type') ?? 'image/png',
+	});
 }

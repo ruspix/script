@@ -10,6 +10,32 @@ declare namespace clsx {
 }
 
 declare global {
+  declare interface INativeTemplate {
+    enabled: boolean;
+    title: string;
+    canvasId: number;
+    x: number;
+    y: number;
+    imageId: number;
+    width: number;
+    height: number;
+  }
+  
+  type templateLoader = {
+    addFile: (
+      file: File,
+      title: string,
+      canvasId: number,
+      x: number,
+      y: number,
+    ) => void;
+  
+    updateFile: (
+      imageId: number,
+      file: File,
+    ) => void;
+  }
+  
   const htm: {
     bind<HResult>(
       h: (type: any, props: Record<string, any>, ...children: any[]) => HResult
@@ -21,6 +47,8 @@ declare global {
   const dayjs: dayjs;
 
   const tippy: tippy;
+
+  const templateLoader: templateLoader;
 
   const clsx: (...inputs: clsx.ClassValue[]) => string;
 
@@ -72,6 +100,17 @@ declare global {
       event: E,
       handler: (msg: MessageEvent) => void,
     ): void;
+  }
+
+  type Canvases = 'ppf';
+
+  declare interface ITemplate {
+    src: string;
+    canvas: Canvases;
+    subCanvas?: number;
+    name: string;
+    x: number;
+    y: number;
   }
 }
 
