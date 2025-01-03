@@ -132,7 +132,7 @@ async function main() {
 	}
 
 	const sse = connectSSE();
-	
+
 	sse.addEventListener('create-news', msg => {
 		/** @type {INews} */
 		const parsed = JSON.parse(msg.data);
@@ -171,7 +171,7 @@ async function main() {
 }
 
 /**
- * @param {IButtonProps} props 
+ * @param {IButtonProps} props
  */
 function Button(props) {
 	return html`
@@ -182,7 +182,7 @@ function Button(props) {
 }
 
 /**
- * @param {IButtonProps} initial 
+ * @param {IButtonProps} initial
  */
 function addOpenButton(initial) {
 	const root = document.createElement('button');
@@ -211,7 +211,7 @@ function addOpenButton(initial) {
  */
 function Article(props) {
 	return html`
-		<article class="rp-article">	
+		<article class="rp-article">
 			<div class="rp-article__header">
 				<h1 class="rp-article__header-title">
 					${props.title}
@@ -239,13 +239,13 @@ function ArticleDelimiter() {
 }
 
 /**
- * @param {IModalProps} props 
+ * @param {IModalProps} props
  */
 function Modal(props) {
 	return html`
 		<div class="${clsx('rp-modal', props.show && 'show')}">
 			<div class="rp-modal__header">
-				<p class="rp-modal__header-online">online: ${props.online ?? '-'}</p>
+				<p class="rp-modal__header-online">онлайн: ${props.online ?? '-'}</p>
 				<h1>Новости Ruspixel</h1>
 				<div class="rp-modal__header-menu">
 					<button class="rp-modal__header-info">
@@ -270,14 +270,14 @@ function Modal(props) {
 }
 
 /**
- * @param {IModalProps} initial 
+ * @param {IModalProps} initial
  */
 function addModal(initial) {
 	const root = document.createElement('div');
 	document.body.appendChild(root);
 
 	let props = initial;
-	
+
 	/**
 	 * @param {Partial<IModalProps>} changes
 	*/
@@ -286,7 +286,7 @@ function addModal(initial) {
 		render(Modal(props), document.body, root);
 		replaceArticleImages(root);
 	}
-	
+
 	update({});
 
 	initInfoPopover('.rp-modal__header-info');
@@ -402,7 +402,7 @@ async function fetchAllNewsHTML(ids) {
 }
 
 /**
- * 
+ *
  * @param {number} id
  * @returns {Promise<string>}
  */
@@ -412,7 +412,7 @@ async function fetchNewsHTML(id) {
 }
 
 /**
- * @param {Partial<ILocalStorageData>} changes 
+ * @param {Partial<ILocalStorageData>} changes
  */
 function updateLocalStorage(changes) {
 	const old = loadLocalStorage() ?? getInitialLocalStorageData();
@@ -457,7 +457,7 @@ function playNotification() {
 }
 
 /**
- * @param {number} id 
+ * @param {number} id
  */
 function setLastViewed(id) {
 	const data = loadLocalStorage();
@@ -468,8 +468,8 @@ function setLastViewed(id) {
 }
 
 /**
- * @param {INewsMeta[]} metas 
- * @param {string[]} htmls 
+ * @param {INewsMeta[]} metas
+ * @param {string[]} htmls
  */
 function mergeMetasAndHtmls(metas, htmls) {
 	return metas.map((meta, i) => ({ ...meta, html: htmls[i] }));
@@ -492,7 +492,7 @@ function replaceArticleImages(el) {
 	articles.forEach(article => {
 		images.push(...Array.from(article.querySelectorAll('img')));
 	});
-	
+
 	Array.from(images)
 	.filter(img => !img.hasAttribute('handled'))
 	.forEach(original => {
@@ -527,7 +527,7 @@ function replaceArticleImages(el) {
 				<img handled src="${original.src}"/>
 				<div class="rp-article__content-image-menu">
 					<button
-						title="download template"
+						title="Скачать шаблон"
 						onclick=${() => void downloadImage(src)}
 					>
 						<img src="${addScriptRepoPrefix('/assets/download-icon.svg')}"/>
@@ -535,7 +535,7 @@ function replaceArticleImages(el) {
 					${ template &&
 						html`
 							<button
-								title="add template to ppf"
+								title="Добавить шаблон на PPF"
 								onclick=${onAddTemplate}
 								class="rp-article__content-image-add-template"
 							>
@@ -621,7 +621,7 @@ function parseTemplateSource(src) {
 		] = rest;
 
 		if(canvas !== 'ppf') throw new Error('invalid canvas name');
-	
+
 		return {
 			src,
 			canvas,
@@ -631,7 +631,7 @@ function parseTemplateSource(src) {
 			y: +y,
 		}
 	}
-	
+
 	throw new Error('invalid template filename version');
 }
 
@@ -643,7 +643,7 @@ function removeExtensionFromFilename(filename) {
 }
 
 /**
- * @param {ITemplate} template 
+ * @param {ITemplate} template
  */
 async function addTemplate(template) {
 	const file = await loadFile(template.src);
@@ -657,14 +657,14 @@ async function addTemplate(template) {
 }
 
 /**
- * @param {ITemplate} template 
+ * @param {ITemplate} template
  */
 function isTemplateExists(template) {
 	return findTemplate(template) !== undefined;
 }
 
 /**
- * @param {ITemplate} template 
+ * @param {ITemplate} template
  */
 function findTemplate(template) {
 	const list = getNativeTemplates();
@@ -679,7 +679,7 @@ function getNativeTemplates() {
 }
 
 /**
- * @param {ITemplate} template 
+ * @param {ITemplate} template
  */
 async function updateTemplate(template) {
 	const found = findTemplate(template);
