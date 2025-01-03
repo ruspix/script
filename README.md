@@ -1,1 +1,2 @@
-Тут будет скрипт под tampermonkey и новостные файлы
+Скрипты под TamperMonkey от RusPixel.  
+Большая часть сделана им - [@TouchedByDarkness](https://github.com/TouchedByDarkness)
