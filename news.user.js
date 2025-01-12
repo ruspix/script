@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ruspixel news
 // @namespace    https://ruspix.github.io/
-// @version      1.11
+// @version      1.12
 // @description  News for Ruspixel faction
 // @author       Darkness
 // @run-at       document-start
@@ -26,6 +26,7 @@
 // @connect      globepixel.fun
 // @connect      localhost
 // @connect      black-and-red.space
+// @connect      ruspixel.vercel.app
 // @match        *://fuckyouarkeros.fun/*
 // @match        *://pixelplanet.fun/*
 // @match        *://pixmap.fun/*
@@ -42,6 +43,7 @@ const html = htm.bind(h);
 const hostUrl = 'https://raw.githubusercontent.com/ruspix/script/main';
 // const apiUrl = 'http://localhost/ruspixel';
 const apiUrl = 'https://black-and-red.space/ruspixel'
+const rusPixelSiteUrl = 'https://ruspixel.vercel.app';
 const checkInterval = 5e3;
 const localStorageKey = 'ruspixel-news-v2';
 const newsPerPage = 20;
@@ -524,7 +526,7 @@ function replaceArticleImages(el) {
 
 		render(html`
 			<div class="rp-article__content-image">
-				<img handled src="${original.src}"/>
+				<img handled srcset="${getImageSrcset(src)}"/>
 				<div class="rp-article__content-image-menu">
 					<button
 						title="Скачать шаблон"
@@ -548,7 +550,16 @@ function replaceArticleImages(el) {
 		`, parent, original);
 		original.remove();
 	});
+}
 
+/**
+ * @param {string} src 
+ */
+function getImageSrcset(src) {
+	return [
+		`${rusPixelSiteUrl}/_next/image?url=${encodeURI(src)}&w=828&q=75 1x`,
+		`${rusPixelSiteUrl}/_next/image?url=${encodeURI(src)}&w=1920&q=75 2x`,
+	].join(', ');
 }
 
 /**
